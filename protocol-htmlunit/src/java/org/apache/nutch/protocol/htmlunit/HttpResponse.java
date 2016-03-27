@@ -211,7 +211,6 @@ public class HttpResponse implements Response {
   
   private void readPlainContent(URL url) throws IOException {
     String page = HtmlUnitWebDriver.getHtmlPage(url.toString(), conf);
-    //System.out.println("Response: " + page);
     content = page.getBytes("UTF-8");
   }
 

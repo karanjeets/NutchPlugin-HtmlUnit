@@ -44,14 +44,13 @@ import com.gargoylesoftware.htmlunit.WebClient;
 public class HtmlUnitWebDriver extends HtmlUnitDriver {
 
   private static final Logger LOG = LoggerFactory.getLogger(HtmlUnitWebDriver.class);
-  private static boolean enableJavascript = true;
-  private static boolean enableCss = false;
-  private static boolean enableRedirect = true;
-  private static long javascriptTimeout = 3500;
-  private static int maxRedirects = 20;
+  private static boolean enableJavascript;
+  private static boolean enableCss;
+  private static boolean enableRedirect;
+  private static long javascriptTimeout;
+  private static int maxRedirects;
   
   public HtmlUnitWebDriver() {
-	// TODO Auto-generated constructor stub
 	super(enableJavascript);
   }
   
@@ -60,7 +59,8 @@ public class HtmlUnitWebDriver extends HtmlUnitDriver {
 	  client.getOptions().setJavaScriptEnabled(enableJavascript);
 	  client.getOptions().setCssEnabled(enableCss);
 	  client.getOptions().setRedirectEnabled(enableRedirect);
-	  client.setJavaScriptTimeout(javascriptTimeout);
+	  if(enableJavascript)
+		  client.setJavaScriptTimeout(javascriptTimeout);
 	  client.getOptions().setThrowExceptionOnScriptError(false);
 	  if(enableRedirect)
 		  client.addWebWindowListener(new HtmlUnitWebWindowListener(maxRedirects));
@@ -68,8 +68,13 @@ public class HtmlUnitWebDriver extends HtmlUnitDriver {
   }
   
   public static WebDriver getDriverForPage(String url, Configuration conf) {
-	  // TODO: Set properties (including javascript, redirects, etc) from nutch-default.xml
-	  long pageLoadTimout = 180;
+	  long pageLoadTimout = conf.getLong("htmlunit.page.load.delay", 3);
+	  enableJavascript = conf.getBoolean("htmlunit.enable.javascript", true);
+	  enableCss = conf.getBoolean("htmlunit.enable.css", false);
+	  javascriptTimeout = conf.getLong("htmlunit.javascript.timeout", 3500);
+	  int redirects = Integer.parseInt(conf.get("http.redirect.max", "0"));
+	  enableRedirect = redirects <= 0 ? false : true;
+	  maxRedirects = redirects;
 	  
 	  WebDriver driver = null;
 	  
@@ -135,9 +140,6 @@ public class HtmlUnitWebDriver extends HtmlUnitDriver {
   public static String getHtmlPage(String url, Configuration conf) {
     WebDriver driver = getDriverForPage(url, conf);
 
-    //System.out.println("Client Logs: " + driver.manage().logs().get(LogType.CLIENT));
-    //System.out.println("Driver Logs: " + driver.manage().logs().get(LogType.DRIVER));
-    
     try {
       if (conf.getBoolean("htmlunit.take.screenshot", false))
     	  takeScreenshot(driver, conf);
